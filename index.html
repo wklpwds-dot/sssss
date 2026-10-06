@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тренажёр по орфографии</title>
+<style>
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f3f4f6;
+        color: #1f2937;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .topics, .levels {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    button {
+        border: none;
+        border-radius: 12px;
+        padding: 15px;
+        font-size: 16px;
+        cursor: pointer;
+        background: white;
+        border: 2px solid #ddd;
+        transition: .2s;
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+    }
+
+    button.active {
+        background: #2563eb;
+        color: white;
+        border-color: #2563eb;
+    }
+
+    .card {
+        background: white;
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,.08);
+        margin-top: 20px;
+    }
+
+    .question {
+        font-size: 24px;
+        text-align: center;
+        margin: 25px 0;
+        font-weight: bold;
+    }
+
+    .answers {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .answer.correct {
+        background: #22c55e;
+        color: white;
+        border-color: #22c55e;
+    }
+
+    .answer.wrong {
+        background: #ef4444;
+        color: white;
+        border-color: #ef4444;
+    }
+
+    #result {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 18px;
+        min-height: 25px;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-top: 25px;
+    }
+
+    .stat {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .stat strong {
+        display: block;
+        font-size: 30px;
+        margin-top: 8px;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .next {
+        width: 100%;
+        margin-top: 20px;
+        background: #111827;
+        color: white;
+    }
+
+    @media(max-width: 650px) {
+        .topics, .levels, .stats {
+            grid-template-columns: 1fr;
+        }
+
+        .answers {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>📚 Тренажёр по орфографии</h1>
+
+    <h2>1. Выберите тему</h2>
+
+    <div class="topics">
+        <button class="topic active" data-topic="verbs">Глаголы</button>
+        <button class="topic" data-topic="participles">Причастия</button>
+        <button class="topic" data-topic="adjectives">Прилагательные</button>
+    </div>
+
+    <h2>2. Выберите уровень</h2>
+
+    <div class="levels">
+        <button class="level active" data-level="easy">🟢 Лёгкий</button>
+        <button class="level" data-level="medium">🟡 Средний</button>
+        <button class="level" data-level="hard">🔴 Сложный</button>
+    </div>
+
+    <div class="card">
+
+        <div id="progress">
+            Вопрос 1
+        </div>
+
+        <div class="question" id="question">
+            Выберите правильный вариант
+        </div>
+
+        <div class="answers" id="answers"></div>
+
+        <div id="result"></div>
+
+        <button class="next hidden" id="next">
+            Следующий вопрос →
+        </button>
+
+    </div>
+
+    <div class="card hidden" id="final">
+
+        <h2 style="text-align:center;">🎉 Результат</h2>
+
+        <div class="stats">
+
+            <div class="stat">
+                Правильные ответы
+                <strong id="correctStat">0</strong>
+            </div>
+
+            <div class="stat">
+                Ошибки
+                <strong id="wrongStat">0</strong>
+            </div>
+
+            <div class="stat">
+                Процент выполнения
+                <strong id="percentStat">0%</strong>
+            </div>
+
+        </div>
+
+        <button class="next" onclick="restart()">
+            🔄 Пройти заново
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+const questions = {
+
+    verbs: {
+
+        easy: [
+            {
+                q: "Он старается всё ____ вовремя.",
+                answers: ["сделать", "зделать"],
+                correct: "сделать"
+            },
+            {
+                q: "Нужно ____ домашнее задание.",
+                answers: ["закончить", "закончит"],
+                correct: "закончить"
+            },
+            {
+                q: "Необходимо ____ правило.",
+                answers: ["запомнить", "запомнит"],
+                correct: "запомнить"
+            }
+        ],
+
+        medium: [
+            {
+                q: "Он решил ____ работу до вечера.",
+                answers: ["закончить", "закончеть"],
+                correct: "закончить"
+            },
+            {
+                q: "Важно ____ ситуацию.",
+                answers: ["проанализировать", "проанализироватьь"],
+                correct: "проанализировать"
+            },
+            {
+                q: "Она продолжает ____ над проектом.",
+                answers: ["работать", "работоть"],
+                correct: "работать"
+            }
+        ],
+
+        hard: [
+            {
+                q: "Не стоит ____ решение слишком поспешно.",
+                answers: ["принимать", "приниматьь"],
+                correct: "принимать"
+            },
+            {
+                q: "Он попытался ____ ошибку.",
+                answers: ["исправить", "исправеть"],
+                correct: "исправить"
+            },
+            {
+                q: "Нужно ____ все обстоятельства.",
+                answers: ["учесть", "учисть"],
+                correct: "учесть"
+            }
+        ]
+
+    },
+
+    participles: {
+
+        easy: [
+            {
+                q: "Как правильно?",
+                answers: ["решённая задача", "решоная задача"],
+                correct: "решённая задача"
+            },
+            {
+                q: "Как правильно?",
+                answers: ["прочитанная книга", "прочитаная книга"],
+                correct: "прочитанная книга"
+            },
+            {
+                q: "Как правильно?",
+                answers: ["написанное письмо", "написаное письмо"],
+                correct: "написанное письмо"
+            }
+        ],
+
+        medium: [
+            {
+                q: "Как правильно?",
+                answers: ["крашеный забор", "крашенный забор"],
+                correct: "крашеный забор"
+            },
+            {
+                q: "Как правильно?",
+                answers: ["жареная картошка", "жаренная картошка"],
+                correct: "жареная картошка"
+            },
+            {
+                q: "Как правильно?",
+                answers: ["выученное правило", "выученое правило"],
+                correct: "выученное правило"
+            }
+        ],
+
+        hard: [
+            {
+                q: "Как правильно?",
+                answers: ["решённая учеником задача", "решёная учеником задача"],
+                correct: "решённая учеником задача"
+            },
+            {
+                q: "Как правильно?",
+                answers: ["непрочитанная книга", "не прочитаная книга"],
+                correct: "непрочитанная книга"
+            },
+            {
+                q: "Как правильно?",
+                answers: ["запертая дверь", "запертаяя дверь"],
+                correct: "запертая дверь"
+            }
+        ]
+
+    },
+
+    adjectives: {
+
+        easy: [
+            {
+                q: "Как правильно?",
+                answers: ["деревянный стол", "деревяный стол"],
+                correct: "деревянный стол"
+            },
+            {
+                q: "Как правильно?",
+                answers: ["оловянный солдатик", "оловяный солдатик"],
+                correct: "оловянный солдатик"
+            },
+            {
+                q: "Как правильно?",
+                answers: ["ветреный день", "ветренный день"],
+                correct: "ветреный день"
+            }
+        ],
+
+        medium: [
+            {
+                q: "Как правильно?",
+                answers: ["искусственный материал", "искуственный материал"],
+                correct: "искусственный материал"
+            },
+            {
+                q: "Как правильно?",
+                answers: ["общественный транспорт", "общественый транспорт"],
+                correct: "общественный транспорт"
+            },
+            {
+                q: "Как правильно?",
+                answers: ["соломенная шляпа", "соломеная шляпа"],
+                correct: "соломенная шляпа"
+            }
+        ],
+
+        hard: [
+            {
+                q: "Как правильно?",
+                answers: ["юный спортсмен", "юнный спортсмен"],
+                correct: "юный спортсмен"
+            },
+            {
+                q: "Как правильно?",
+                answers: ["безветренная погода", "безветреная погода"],
+                correct: "безветренная погода"
+            },
+            {
+                q: "Как правильно?",
+                answers: ["экстренный случай", "экстреный случай"],
+                correct: "экстренный случай"
+            }
+        ]
+
+    }
+
+};
+
+let topic = "verbs";
+let level = "easy";
+let current = 0;
+let correct = 0;
+let wrong = 0;
+let answered = false;
+
+const topicButtons = document.querySelectorAll(".topic");
+const levelButtons = document.querySelectorAll(".level");
+
+topicButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        topicButtons.forEach(b => b.classList.remove("active"));
+
+        button.classList.add("active");
+
+        topic = button.dataset.topic;
+
+        start();
+
+    });
+
+});
+
+levelButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        levelButtons.forEach(b => b.classList.remove("active"));
+
+        button.classList.add("active");
+
+        level = button.dataset.level;
+
+        start();
+
+    });
+
+});
+
+function start() {
+
+    current = 0;
+    correct = 0;
+    wrong = 0;
+
+    document.querySelector(".card").classList.remove("hidden");
+    document.getElementById("final").classList.add("hidden");
+
+    showQuestion();
+
+}
+
+function showQuestion() {
+
+    answered = false;
+
+    const list = questions[topic][level];
+
+    const item = list[current];
+
+    document.getElementById("progress").textContent =
+        `Вопрос ${current + 1} из ${list.length}`;
+
+    document.getElementById("question").textContent = item.q;
+
+    const answers = document.getElementById("answers");
+
+    answers.innerHTML = "";
+
+    document.getElementById("result").textContent = "";
+
+    document.getElementById("next").classList.add("hidden");
+
+    item.answers.forEach(answer => {
+
+        const button = document.createElement("button");
+
+        button.className = "answer";
+
+        button.textContent = answer;
+
+        button.addEventListener("click", () => checkAnswer(button, answer));
+
+        answers.appendChild(button);
+
+    });
+
+}
+
+function checkAnswer(button, answer) {
+
+    if (answered) return;
+
+    answered = true;
+
+    const item = questions[topic][level];
+
+    const allButtons = document.querySelectorAll(".answer");
+
+    allButtons.forEach(b => {
+
+        b.disabled = true;
+
+        if (b.textContent === item.correct) {
+            b.classList.add("correct");
+        }
+
+    });
+
+    if (answer === item.correct) {
+
+        correct++;
+
+        button.classList.add("correct");
+
+        document.getElementById("result").textContent =
+            "✅ Правильно!";
+
+    } else {
+
+        wrong++;
+
+        button.classList.add("wrong");
+
+        document.getElementById("result").textContent =
+            "❌ Ошибка. Правильный ответ выделен зелёным.";
+
+    }
+
+    document.getElementById("next").classList.remove("hidden");
+
+}
+
+document.getElementById("next").addEventListener("click", () => {
+
+    const list = questions[topic][level];
+
+    current++;
+
+    if (current >= list.length) {
+
+        finish();
+
+    } else {
+
+        showQuestion();
+
+    }
+
+});
+
+function finish() {
+
+    document.querySelector(".card").classList.add("hidden");
+
+    document.getElementById("final").classList.remove("hidden");
+
+    const total = correct + wrong;
+
+    const percent = total === 0
+        ? 0
+        : Math.round(correct / total * 100);
+
+    document.getElementById("correctStat").textContent = correct;
+
+    document.getElementById("wrongStat").textContent = wrong;
+
+    document.getElementById("percentStat").textContent = percent + "%";
+
+}
+
+function restart() {
+
+    start();
+
+}
+
+start();
+
+</script>
+
+</body>
+</html>
